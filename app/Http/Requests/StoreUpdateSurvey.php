@@ -23,9 +23,17 @@ class StoreUpdateSurvey extends FormRequest
      */
     public function rules()
     {
-        return [
+
+        $rules = [
             'name' => ['required', 'min:3', 'max:256'],
-            'description' => ['required', 'min:5', 'max:10000'],
+            'description' => ['nullable', 'min:5', 'max:10000'],
+            'image' => ['required', 'image'],
+            'user' => ['nullable'],
         ];
+
+        if ($this->method() == "PUT")
+            $rules['image'] = ['nullable', 'image'];
+
+        return $rules;
     }
 }

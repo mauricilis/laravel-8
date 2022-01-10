@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreUpdateSurvey;
 use App\Models\Survey;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SurveyController extends Controller
 {
@@ -24,8 +26,17 @@ class SurveyController extends Controller
 
     public function store(StoreUpdateSurvey $request)
     {
+        $data = $request->all();
 
-        $survey = Survey::create($request->all());
+        if ($request->image->isValid()) {
+
+            $nameFile = Str::of($request->name)->slug('-') . '_' . date('Ymdhis') . '.' . $request->image->getClientOriginalExtension();
+
+            $file = $request->image->storeAs('survays', $nameFile);
+            $data['image'] = $file;
+        }
+
+        $survey = Survey::create($data);
 
         return redirect()->route('surveys.index')->with('message', 'Survey has created successfully');;
     }
@@ -43,6 +54,9 @@ class SurveyController extends Controller
     {
         if (!$survey = Survey::find($id))
             return redirect()->route('surveys.index');
+
+        if (Storage::exists($survey->image))
+            Storage::delete($survey->image);
 
         $survey->delete();
 
@@ -62,7 +76,21 @@ class SurveyController extends Controller
         if (!$survey = Survey::find($id))
             return redirect()->route('surveys.index');
 
-        $survey->update($request->all());
+        $data = $request->all();
+
+        
+        if ($request->image && $request->image->isValid()) {
+
+            if (Storage::exists($survey->image))
+                Storage::delete($survey->image);
+
+            $nameFile = Str::of($request->name)->slug('-') . '_' . date('Ymdhis') . '.' . $request->image->getClientOriginalExtension();
+
+            $file = $request->image->storeAs('survays', $nameFile);
+            $data['image'] = $file;
+        }
+
+        $survey->update($data);
 
         return redirect()->route('surveys.index')->with('message', 'Survey has updated successfully');
     }
@@ -73,6 +101,6 @@ class SurveyController extends Controller
 
         $surveys = Survey::where('name', 'LIKE', "%{$request->search}%")->orWhere('description', 'LIKE', "%{$request->search}%")->paginate(1);
 
-        return view('admin.surveys.index', compact('surveys','filters'));
+        return view('admin.surveys.index', compact('surveys', 'filters'));
     }
 }

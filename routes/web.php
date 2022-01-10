@@ -13,3 +13,14 @@ Route::get('/surveys/edit/{id}', [SurveyController::class, "edit"])->name('surve
 Route::delete('/surveys/{id}', [SurveyController::class, "destroy"])->name('surveys.destroy');
 Route::put('/surveys/{id}', [SurveyController::class, "update"])->name('surveys.update');
 
+
+
+Route::get('/', function () {
+    return view('welcome');
+})->name('welcome');
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth'])->name('dashboard');
+
+require __DIR__ . '/auth.php';
